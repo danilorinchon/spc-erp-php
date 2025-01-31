@@ -6,11 +6,13 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 include_once "../../config/database.php";
 include_once "../../models/Reservations.php";
+include_once "../../models/Clients.php"; // Importa o modelo de clientes
 
 $database = new Database();
 $db = $database->getConnection();
 
 $reservation = new Reservations($db);
+$client = new Clients($db);
 
 // Obter dados do POST
 $data = json_decode(file_get_contents("php://input"));
@@ -24,14 +26,20 @@ if (!empty($data->space_id) && !empty($data->client_id) && !empty($data->data_re
     $reservation->status = $data->status ?? "pendente";
     $reservation->valor_total = $data->valor_total;
 
-    // Verifica disponibilidade antes de criar a reserva
+    // 🚨 Validar se o cliente existe
+    if (!$client->exists($data->client_id)) {
+        echo json_encode(["message" => "Erro: Cliente não encontrado."]);
+        exit;
+    }
+
+    // 🚨 Verifica disponibilidade antes de criar a reserva
     $disponibilidade = $reservation->verificarDisponibilidade();
-    
+
     if ($disponibilidade['disponivel']) {
         if ($reservation->create()) {
             echo json_encode(["message" => "Reserva criada com sucesso!"]);
         } else {
-            echo json_encode(["message" => "Erro ao criar reserva. Verifique os dados e tente novamente."]);
+            echo json_encode(["message" => "Erro ao criar reserva."]);
         }
     } else {
         echo json_encode([

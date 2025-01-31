@@ -53,6 +53,34 @@ class Reservations {
         return $stmt;
     }
     
+    // Verificação de concorrência de horário antes de criar uma reserva
+    public function verificarDisponibilidade() {
+        $query = "SELECT MAX(hora_fim) AS ultima_hora_ocupada 
+                  FROM " . $this->table_name . " 
+                  WHERE space_id = :space_id 
+                  AND data_reserva = :data_reserva
+                  AND status IN ('pendente', 'confirmada')
+                  AND ((hora_inicio < :hora_fim AND hora_fim > :hora_inicio))";
+    
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":space_id", $this->space_id, PDO::PARAM_INT);
+        $stmt->bindParam(":data_reserva", $this->data_reserva);
+        $stmt->bindParam(":hora_inicio", $this->hora_inicio);
+        $stmt->bindParam(":hora_fim", $this->hora_fim);
+        
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if ($result && $result['ultima_hora_ocupada']) {
+            return [
+                "disponivel" => false,
+                "proximo_horario" => $result['ultima_hora_ocupada']
+            ];
+        }
+    
+        return ["disponivel" => true];
+    }
+        
 
 }
 ?>

@@ -24,10 +24,20 @@ if (!empty($data->space_id) && !empty($data->client_id) && !empty($data->data_re
     $reservation->status = $data->status ?? "pendente";
     $reservation->valor_total = $data->valor_total;
 
-    if ($reservation->create()) {
-        echo json_encode(["message" => "Reserva criada com sucesso!"]);
+    // Verifica disponibilidade antes de criar a reserva
+    $disponibilidade = $reservation->verificarDisponibilidade();
+    
+    if ($disponibilidade['disponivel']) {
+        if ($reservation->create()) {
+            echo json_encode(["message" => "Reserva criada com sucesso!"]);
+        } else {
+            echo json_encode(["message" => "Erro ao criar reserva. Verifique os dados e tente novamente."]);
+        }
     } else {
-        echo json_encode(["message" => "Erro ao criar reserva. Verifique os dados e tente novamente."]);
+        echo json_encode([
+            "message" => "Erro: O espaço já está reservado nesse período.",
+            "proximo_horario_disponivel" => $disponibilidade['proximo_horario']
+        ]);
     }
 } else {
     echo json_encode(["message" => "Erro: Todos os campos obrigatórios devem ser preenchidos."]);

@@ -92,27 +92,20 @@ public function update() {
     return false;
 }
 
-// Excluir cliente
-public function exists() {
-    $query = "SELECT id FROM " . $this->table_name . " WHERE id = :id";
+// Verficar se o cliente existe. 
+// Agora a função retorna true se encontrar pelo menos 1 cliente.
+// evitando problemas ao contar registros usando rowCount()
+public function exists($id) {
+    $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE id = :id";
     $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
     $stmt->execute();
-    return $stmt->rowCount() > 0;
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $result['total'] > 0;
 }
 
-//public function delete() {
-//    $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
-//    $stmt = $this->conn->prepare($query);
-//
-//    $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
-//
-//    if ($stmt->execute()) {
-//        return true;
-//    }
-//    return false;
-//}
-
+// Deleta cliente com base no id
 public function deleteClient() { // Renomeado para evitar conflito
     $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
     $stmt = $this->conn->prepare($query);
@@ -120,8 +113,6 @@ public function deleteClient() { // Renomeado para evitar conflito
 
     return $stmt->execute();
 }
-
-
 
 // Novo metodo create
 public function create() {

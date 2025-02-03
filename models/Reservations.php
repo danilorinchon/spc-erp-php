@@ -81,6 +81,16 @@ class Reservations {
         return ["disponivel" => true];
     }
         
+    // Verificar se o cliente existe antes de criar a reserva
+    public function exists($id) {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+    
+        return $stmt->rowCount() > 0;
+    }
+    
 
 }
 ?>

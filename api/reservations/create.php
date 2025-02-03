@@ -4,9 +4,11 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-include_once "../../config/database.php";
-include_once "../../models/Reservations.php";
-include_once "../../models/Clients.php"; // Importa o modelo de clientes
+require_once "../../config/database.php";
+require_once "../../models/Reservations.php";
+require_once "../../models/Clients.php";  // Garante que só será incluído uma vez
+
+
 
 $database = new Database();
 $db = $database->getConnection();
@@ -25,6 +27,17 @@ if (!empty($data->space_id) && !empty($data->client_id) && !empty($data->data_re
     $reservation->hora_fim = $data->hora_fim;
     $reservation->status = $data->status ?? "pendente";
     $reservation->valor_total = $data->valor_total;
+
+    // 🚨 Verificar se o intervalo mínimo da reserva é de 1 hora
+    $inicio = new DateTime($reservation->hora_inicio);
+    $fim = new DateTime($reservation->hora_fim);
+    $intervalo = $inicio->diff($fim);
+    $horas = $intervalo->h + ($intervalo->i / 60); // Converte minutos em fração de hora
+
+    if ($horas < 1) {
+        echo json_encode(["message" => "Erro: A reserva deve ter no mínimo 1 hora de duração."]);
+        exit;
+    }
 
     // 🚨 Validar se o cliente existe
     if (!$client->exists($data->client_id)) {

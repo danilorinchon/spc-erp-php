@@ -101,17 +101,27 @@ public function exists() {
     return $stmt->rowCount() > 0;
 }
 
-public function delete() {
+//public function delete() {
+//    $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+//    $stmt = $this->conn->prepare($query);
+//
+//    $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
+//
+//    if ($stmt->execute()) {
+//        return true;
+//    }
+//    return false;
+//}
+
+public function deleteClient() { // Renomeado para evitar conflito
     $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
     $stmt = $this->conn->prepare($query);
-
     $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
 
-    if ($stmt->execute()) {
-        return true;
-    }
-    return false;
+    return $stmt->execute();
 }
+
+
 
 // Novo metodo create
 public function create() {
@@ -155,21 +165,6 @@ public function create() {
     }
     return false;
 }
-
-// Deletanto um cliente
-public function delete() {
-    $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
-    $stmt = $this->conn->prepare($query);
-
-    $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
-
-    if ($stmt->execute()) {
-        return true;
-    }
-    return false;
-}
-
-
 
 }
 ?>

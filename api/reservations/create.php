@@ -4,10 +4,13 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-require_once "../../config/database.php";
-require_once "../../models/Reservations.php";
-require_once "../../models/Clients.php";  // Garante que só será incluído uma vez
+//require_once "../../config/database.php";
+//require_once "../../models/Reservations.php";
+//require_once "../../models/Clients.php";  // Garante que só será incluído uma vez
 
+include_once "../../config/database.php";
+include_once "../../models/Reservations.php"; 
+include_once "../../models/Clients.php";
 
 
 $database = new Database();

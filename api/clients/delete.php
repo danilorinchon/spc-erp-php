@@ -24,7 +24,7 @@ if (!empty($data->id)) {
         return;
     }
 
-    if ($client->delete()) {
+    if ($client->deleteClient()) {
         echo json_encode(["message" => "Cliente deletado com sucesso!"]);
     } else {
         echo json_encode(["message" => "Erro ao deletar cliente."]);

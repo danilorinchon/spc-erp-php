@@ -85,4 +85,11 @@ if (!empty($data->space_id) && !empty($data->client_id) && !empty($data->data_re
     echo json_encode(["message" => "Erro: Todos os campos obrigatórios devem ser preenchidos."]);
 }
 
+// 🚨 Validar se o cliente está ativo
+if (!$client->isActive($data->client_id)) {
+    echo json_encode(["message" => "Erro: Cliente inativo não pode realizar reservas."]);
+    exit;
+}
+
+
 ?>

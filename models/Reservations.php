@@ -121,8 +121,18 @@ class Reservations {
     
         return $stmt->execute();
     }
-    
 
+    // Gerencia log de reservas 
+    public function logChange($reserva_id, $user_id, $acao, $descricao) {
+        $query = "INSERT INTO logs_reservations (reserva_id, user_id, acao, descricao) VALUES (:reserva_id, :user_id, :acao, :descricao)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":reserva_id", $reserva_id, PDO::PARAM_INT);
+        $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
+        $stmt->bindParam(":acao", $acao);
+        $stmt->bindParam(":descricao", $descricao);
+        return $stmt->execute();
+    }
+    
 
 }
 ?>

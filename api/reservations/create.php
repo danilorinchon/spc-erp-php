@@ -22,6 +22,23 @@ $client = new Clients($db);
 // Obter dados do POST
 $data = json_decode(file_get_contents("php://input"));
 
+// 🚨 Validar se é um cliente avulso (não tem contrato)
+$eh_cliente_avulso = !$client->hasActiveContract($data->client_id);
+
+// 🚨 Se for cliente avulso, definir status de pagamento pendente
+if ($eh_cliente_avulso) {
+    $reservation->status = "pendente_pagamento";
+    $reservation->prazo_pagamento = date("Y-m-d H:i:s", strtotime("+1 hour"));
+}
+
+// 🚀 Criar reserva normalmente
+if ($reservation->create()) {
+    echo json_encode(["message" => "Reserva criada com sucesso!"]);
+} else {
+    echo json_encode(["message" => "Erro ao criar reserva."]);
+}
+
+
 if (!empty($data->space_id) && !empty($data->client_id) && !empty($data->data_reserva) && !empty($data->hora_inicio) && !empty($data->hora_fim) && isset($data->valor_total)) {
     $reservation->space_id = $data->space_id;
     $reservation->client_id = $data->client_id;
@@ -63,7 +80,9 @@ if (!empty($data->space_id) && !empty($data->client_id) && !empty($data->data_re
             "proximo_horario_disponivel" => $disponibilidade['proximo_horario']
         ]);
     }
+
 } else {
     echo json_encode(["message" => "Erro: Todos os campos obrigatórios devem ser preenchidos."]);
 }
+
 ?>

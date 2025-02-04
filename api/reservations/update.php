@@ -46,9 +46,17 @@ if (!isset($data->user_id)) {
 
 // Logs para auditoria
 if ($reservation->update()) {
-    // 🚀 Adicionando log da atualização da reserva
-    $reservation->logChange($reservation->id, $data->user_id, 'alterado', 
-        'Reserva do espaço ' . $reservation->space_id . ' foi alterada para a data ' . $reservation->data_reserva);
+    // 🚨 Garantir que `user_id` está no JSON antes de chamar `logChange()`
+    if (isset($data->user_id)) {
+        $reservation->logChange(
+            $reservation->id,
+            $data->user_id,
+            'alterado',
+            'Reserva do espaço ' . $reservation->space_id . ' foi alterada para a data ' . $reservation->data_reserva
+        );
+    } else {
+        echo json_encode(["message" => "Reserva atualizada, mas log não registrado: user_id ausente."]);
+    }
 
     echo json_encode(["message" => "Reserva atualizada com sucesso!"]);
 } else {

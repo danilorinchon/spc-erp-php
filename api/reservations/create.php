@@ -21,6 +21,42 @@ $data = json_decode(file_get_contents("php://input"));
 // 🚨 Validar se é um cliente avulso (não tem contrato)
 $eh_cliente_avulso = !$client->hasActiveContract($data->client_id);
 
+// nova regra 03/02/25
+include_once '../../models/People.php';
+include_once '../../models/Clients.php';
+
+// Criar instâncias
+$person = new People($db);
+$client = new Clients($db);
+
+// Verificar se a pessoa existe
+$personExists = $person->exists($data->client_id);
+
+if (!$personExists) {
+    // Criar nova pessoa
+    $person->id = $data->client_id;
+    $person->nome = "Cliente Avulso"; // Podemos pedir o nome no front-end depois
+    $person->email = "email@placeholder.com"; // Podemos pedir um email depois
+    $person->telefone = "00000000000"; // Podemos pedir telefone depois
+    if ($person->create()) {
+        // Criar um cliente avulso
+        $client->person_id = $person->id;
+        $client->is_avulso = true;
+        if ($client->create()) {
+            echo json_encode(["message" => "Cliente não encontrado. Foi cadastrado como Cliente Avulso."]);
+        } else {
+            echo json_encode(["message" => "Erro ao cadastrar cliente avulso."]);
+            exit;
+        }
+    } else {
+        echo json_encode(["message" => "Erro ao cadastrar nova pessoa."]);
+        exit;
+    }
+}
+
+// fim 03/02/25
+
+
 // 🚨 Se for cliente avulso, definir status de pagamento pendente
 if ($eh_cliente_avulso) {
     $reservation->status = "pendente_pagamento";

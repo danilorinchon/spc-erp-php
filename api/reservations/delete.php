@@ -43,4 +43,17 @@ if ($reservation->delete()) {
 } else {
     echo json_encode(["message" => "Erro ao cancelar reserva."]);
 }
+
+// Logs para auditoria
+if ($reservation->delete()) {
+    // 🚀 Adicionando log da exclusão da reserva
+    $reservation->logChange($reservation->id, $data->user_id, 'cancelado', 
+        'Reserva do espaço ' . $reservation->space_id . ' foi cancelada.');
+
+    echo json_encode(["message" => "Reserva cancelada com sucesso!"]);
+} else {
+    echo json_encode(["message" => "Erro ao cancelar reserva."]);
+}
+
+
 ?>

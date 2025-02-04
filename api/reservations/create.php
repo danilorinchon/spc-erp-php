@@ -91,5 +91,27 @@ if (!$client->isActive($data->client_id)) {
     exit;
 }
 
+// 🚨 Validar se a reserva está dentro do horário comercial
+$hora_abertura = "08:00:00";
+$hora_fechamento = "20:00:00";
+$data_reserva = new DateTime($data->data_reserva);
+$dia_semana = $data_reserva->format("N"); // 1 = Segunda, 7 = Domingo
+
+// 🚨 Bloquear reservas fora do horário comercial
+if ($data->hora_inicio < $hora_abertura || $data->hora_fim > $hora_fechamento) {
+    echo json_encode(["message" => "Erro: Reservas só são permitidas entre 08:00 e 20:00."]);
+    exit;
+}
+
+// 🚨 Validar mínimo de 4h para finais de semana e feriados
+if ($dia_semana >= 6) {
+    $duracao = (strtotime($data->hora_fim) - strtotime($data->hora_inicio)) / 3600;
+    if ($duracao < 4) {
+        echo json_encode(["message" => "Erro: Reservas de fim de semana e feriados devem ter no mínimo 4h."]);
+        exit;
+    }
+}
+
+
 
 ?>

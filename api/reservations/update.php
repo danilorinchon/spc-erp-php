@@ -37,4 +37,22 @@ if ($reservation->update()) {
 } else {
     echo json_encode(["message" => "Erro ao atualizar reserva."]);
 }
+
+// verificar se user_id está definido antes de chamar logChange()
+if (!isset($data->user_id)) {
+    echo json_encode(["message" => "Erro: ID do usuário não informado para registro do log."]);
+    exit;
+}
+
+// Logs para auditoria
+if ($reservation->update()) {
+    // 🚀 Adicionando log da atualização da reserva
+    $reservation->logChange($reservation->id, $data->user_id, 'alterado', 
+        'Reserva do espaço ' . $reservation->space_id . ' foi alterada para a data ' . $reservation->data_reserva);
+
+    echo json_encode(["message" => "Reserva atualizada com sucesso!"]);
+} else {
+    echo json_encode(["message" => "Erro ao atualizar reserva."]);
+}
+
 ?>

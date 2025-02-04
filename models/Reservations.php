@@ -90,7 +90,39 @@ class Reservations {
     
         return $stmt->rowCount() > 0;
     }
+
+    // Atualizando uma reserva por id
+    public function update() {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET space_id = :space_id, client_id = :client_id, data_reserva = :data_reserva, 
+                      hora_inicio = :hora_inicio, hora_fim = :hora_fim, valor_total = :valor_total, status = :status
+                  WHERE id = :id";
     
+        $stmt = $this->conn->prepare($query);
+    
+        $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
+        $stmt->bindParam(":space_id", $this->space_id, PDO::PARAM_INT);
+        $stmt->bindParam(":client_id", $this->client_id, PDO::PARAM_INT);
+        $stmt->bindParam(":data_reserva", $this->data_reserva);
+        $stmt->bindParam(":hora_inicio", $this->hora_inicio);
+        $stmt->bindParam(":hora_fim", $this->hora_fim);
+        $stmt->bindParam(":valor_total", $this->valor_total);
+        $stmt->bindParam(":status", $this->status);
+    
+        return $stmt->execute();
+    }
+    
+    // Deletando uma reserva por id
+    public function delete() {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+    
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
+    
+        return $stmt->execute();
+    }
+    
+
 
 }
 ?>

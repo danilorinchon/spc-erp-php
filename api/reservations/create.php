@@ -4,10 +4,6 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-//require_once "../../config/database.php";
-//require_once "../../models/Reservations.php";
-//require_once "../../models/Clients.php";  // Garante que só será incluído uma vez
-
 include_once "../../config/database.php";
 include_once "../../models/Reservations.php"; 
 include_once "../../models/Clients.php";
@@ -29,7 +25,57 @@ $eh_cliente_avulso = !$client->hasActiveContract($data->client_id);
 if ($eh_cliente_avulso) {
     $reservation->status = "pendente_pagamento";
     $reservation->prazo_pagamento = date("Y-m-d H:i:s", strtotime("+1 hour"));
+
+} else {
+/// verifica se o cliente possui um contrato ativo         
+    if (!$client->hasActiveContract($data->client_id)) {
+    echo json_encode(["message" => "Erro: Cliente não possui um contrato ativo e não pode fazer reservas."]);
+    exit;
+    }
 }
+
+// Regras para validação de horários
+// Definição do horário comercial de segunda a sexta-feira (dias úteis)
+$hora_abertura = "08:00:00";
+$hora_fechamento = "20:00:00";
+
+// Converter horários para comparação
+$hora_inicio_reserva = strtotime($data->hora_inicio);
+$hora_fim_reserva = strtotime($data->hora_fim);
+$hora_abertura_sistema = strtotime($hora_abertura);
+$hora_fechamento_sistema = strtotime($hora_fechamento);
+
+// Obter a data da reserva para verificar se é dia útil ou final de semana
+$data_reserva = new DateTime($data->data_reserva);
+$dia_semana = $data_reserva->format("N"); // 1 = Segunda-feira, 7 = Domingo
+
+// Verifica se é feriado
+$feriados = ["2025-01-01", "2025-02-25", "2025-04-21", "2025-05-01", "2025-09-07", "2025-10-12", "2025-11-02", "2025-11-15", "2025-12-25"]; // Adicione os feriados da cidade de Osasco
+$eh_feriado = in_array($data->data_reserva, $feriados);
+
+// 🚨 Ajuste para reservas antes do horário de abertura (Segunda a Sexta-feira dias úteis)
+if ($dia_semana >= 1 && $dia_semana <= 5 && !$eh_feriado && $hora_inicio_reserva < $hora_abertura_sistema) {
+    $data->hora_fim = $hora_abertura;
+    echo json_encode(["message" => "A reserva começa antes do horário de abertura da casa. O horário de término foi ajustado para $hora_abertura."]);
+    exit;
+}
+
+// 🚨 Ajuste para reservas após o horário de fechamento (Segunda a Sexta-feira dias úteis)
+if ($dia_semana >= 1 && $dia_semana <= 5 && !$eh_feriado && $hora_fim_reserva > $hora_fechamento_sistema) {
+    $data->hora_inicio = $hora_fechamento;
+    echo json_encode(["message" => "A reserva termina após o horário de expediente. O horário de início foi ajustado para $hora_fechamento."]);
+    exit;
+}
+
+// 🚨 Validação para finais de semana e feriados (Mínimo de 4 horas)
+if ($dia_semana >= 6 || $eh_feriado) {
+    $duracao = ($hora_fim_reserva - $hora_inicio_reserva) / 3600;
+    if ($duracao < 4) {
+        echo json_encode(["message" => "Erro: Reservas de fim de semana e feriados devem ter no mínimo 4 horas."]);
+        exit;
+    }
+}
+
 
 // 🚀 Criar reserva normalmente
 if ($reservation->create()) {
@@ -91,27 +137,16 @@ if (!$client->isActive($data->client_id)) {
     exit;
 }
 
-// 🚨 Validar se a reserva está dentro do horário comercial
-$hora_abertura = "08:00:00";
-$hora_fechamento = "20:00:00";
-$data_reserva = new DateTime($data->data_reserva);
-$dia_semana = $data_reserva->format("N"); // 1 = Segunda, 7 = Domingo
+// Logs para auditoria
+if ($reservation->create()) {
+    // 🚀 Adicionando log da criação da reserva
+    $reservation->logChange($reservation->id, $data->user_id, 'criado', 
+        'Reserva criada para o espaço ' . $reservation->space_id . ' na data ' . $reservation->data_reserva);
 
-// 🚨 Bloquear reservas fora do horário comercial
-if ($data->hora_inicio < $hora_abertura || $data->hora_fim > $hora_fechamento) {
-    echo json_encode(["message" => "Erro: Reservas só são permitidas entre 08:00 e 20:00."]);
-    exit;
+    echo json_encode(["message" => "Reserva criada com sucesso!"]);
+} else {
+    echo json_encode(["message" => "Erro ao criar reserva."]);
 }
-
-// 🚨 Validar mínimo de 4h para finais de semana e feriados
-if ($dia_semana >= 6) {
-    $duracao = (strtotime($data->hora_fim) - strtotime($data->hora_inicio)) / 3600;
-    if ($duracao < 4) {
-        echo json_encode(["message" => "Erro: Reservas de fim de semana e feriados devem ter no mínimo 4h."]);
-        exit;
-    }
-}
-
 
 
 ?>

@@ -168,6 +168,16 @@ public function isActive($id) {
     return $result['status'] === 'ativo';
 }
 
+// Verifica se o cliente tem contrato ativo
+public function hasActiveContract($client_id) {
+    $query = "SELECT COUNT(*) as total FROM contracts WHERE client_id = :client_id AND status = 'ativo'";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':client_id', $client_id);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return ($row['total'] > 0); // Retorna true se o cliente tem um contrato ativo
+}
 
 }
 ?>

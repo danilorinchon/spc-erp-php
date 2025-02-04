@@ -157,5 +157,17 @@ public function create() {
     return false;
 }
 
+// Valida se um cliente é ativo
+public function isActive($id) {
+    $query = "SELECT status FROM " . $this->table_name . " WHERE id = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $result['status'] === 'ativo';
+}
+
+
 }
 ?>

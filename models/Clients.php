@@ -114,7 +114,7 @@ public function deleteClient() { // Renomeado para evitar conflito
     return $stmt->execute();
 }
 
-// Novo metodo create
+// Novo metodo create do contrato
 public function create() {
     // Verificar se o cliente existe
     $query_check_client = "SELECT id FROM clients WHERE id = :client_id";
@@ -178,6 +178,19 @@ public function hasActiveContract($client_id) {
 
     return ($row['total'] > 0); // Retorna true se o cliente tem um contrato ativo
 }
+
+// Validação de clientes avulso
+public function isAvulso($client_id) {
+    $query = "SELECT is_avulso FROM clients WHERE id = :client_id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':client_id', $client_id);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return ($row && $row['is_avulso'] == 1); // Retorna true se o cliente é avulso
+}
+
+
 
 }
 ?>
